@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStreamReader;
-import java.util.*;
 
 @Service
 public class CsvToJsonService {
@@ -16,42 +15,45 @@ public class CsvToJsonService {
         CSVParser parser = CSVFormat.DEFAULT
                 .withDelimiter(';')
                 .withFirstRecordAsHeader()
-                .withIgnoreHeaderCase()
                 .withTrim()
                 .parse(new InputStreamReader(file.getInputStream()));
 
         Root root = new Root();
-        Map<String, Header> headerMap = new LinkedHashMap<>();
+
+        Header currentHeader = null;
+        String previousHeaderId = null;
 
         for (CSVRecord record : parser) {
 
-            String headerId = record.get("CostAllocationIdentifier");
+            String currentHeaderId = record.get("CostAllocationIdentifier");
 
-            Header header = headerMap.get(headerId);
-            if (header == null) {
-                header = new Header();
-                header.costAllocationIdentifier = headerId;
-                header.costAllocationTypeCode = record.get("CostAllocationTypeCode");
-                header.statusCode = record.get("StatusCode");
-                header.documentCreationDate = record.get("DocumentCreationDate");
-                header.approvalDate = record.get("ApprovalDate");
-                header.supplierName = record.get("SupplierName");
-                header.accountingDate = record.get("AccountingDate");
-                header.grossAmount = record.get("GrossAmount");
-                header.vatAmount = record.get("VatAmount");
-                header.currencyCode = record.get("CurrencyCode");
-                header.dueDate = record.get("DueDate");
+            // ÚJ HEADER KEZDŐDIK
+            if (currentHeader == null || !currentHeaderId.equals(previousHeaderId)) {
 
-                headerMap.put(headerId, header);
+                currentHeader = new Header();
+                currentHeader.costAllocationIdentifier = currentHeaderId;
+                currentHeader.costAllocationTypeCode = record.get("CostAllocationTypeCode");
+                currentHeader.statusCode = record.get("StatusCode");
+                currentHeader.documentCreationDate = record.get("DocumentCreationDate");
+                currentHeader.approvalDate = record.get("ApprovalDate");
+                currentHeader.supplierName = record.get("SupplierName");
+                currentHeader.accountingDate = record.get("AccountingDate");
+                currentHeader.grossAmount = record.get("GrossAmount");
+                currentHeader.vatAmount = record.get("VatAmount");
+                currentHeader.currencyCode = record.get("CurrencyCode");
+                currentHeader.dueDate = record.get("DueDate");
+
+                root.headers.add(currentHeader);
             }
 
+            // LINE HOZZÁADÁSA
             Line line = new Line();
             line.costAllocationLineIdentifier = record.get("CostAllocationLineIdentifier");
             line.originalCostAllocationLineId = record.get("OriginalCostAllocationLineID");
             line.statusCode = record.get("LineStatusCode");
             line.grossAmount = record.get("LineGrossAmount");
             line.vatAmount = record.get("LineVatAmount");
-            line.currencyCode = record.get("CurrencyCode");
+            line.currencyCode = record.get("LineCurrencyCode");
             line.debtCaseId = record.get("DebtCaseId");
             line.debtorName = record.get("DebtorName");
             line.collateralCity = record.get("CollateralCity");
@@ -59,10 +61,11 @@ public class CsvToJsonService {
             line.sapDocumentNumber = record.get("SapDocumentNumber");
             line.fulfillmentDate = record.get("FulfillmentDate");
 
-            header.lines.add(line);
+            currentHeader.lines.add(line);
+
+            previousHeaderId = currentHeaderId;
         }
 
-        root.headers.addAll(headerMap.values());
         return root;
     }
 }
