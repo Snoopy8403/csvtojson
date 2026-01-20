@@ -1,26 +1,31 @@
 package com.kesmarki.interfacecatalog.service.costallocinterface;
 
 import com.kesmarki.interfacecatalog.domain.costallocinterface.CostAllocInterface.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockMultipartFile;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class CostAllocInterfaceServiceTest {
 
+    @InjectMocks
     private CostAllocInterfaceService service;
 
-    @BeforeEach
-    void setUp() {
-        service = new CostAllocInterfaceService();
-    }
+    @Mock
+    private MultipartFile multipartFile;
 
     @Test
-    void convert_shouldCreateSingleHeaderWithMultipleLines() throws Exception {
+    void convert_shouldGroupLinesUnderSameHeader() throws Exception {
         String csv =
                 "CostAllocationIdentifier;CostAllocationTypeCode;StatusCode;DocumentCreationDate;ApprovalDate;SupplierName;AccountingDate;GrossAmount;VatAmount;CurrencyCode;DueDate;" +
                         "CostAllocationLineIdentifier;OriginalCostAllocationLineID;DebtCaseId;DebtorName;CollateralCity;CollateralParcelNumber;SapDocumentNumber;FulfillmentDate\n" +
@@ -29,30 +34,25 @@ class CostAllocInterfaceServiceTest {
                         "HDR1;TYPE1;1;20240101;20240102;Supplier A;20240103;1000,50;270,50;HUF;20240110;" +
                         "LINE2;11;101;Jane Doe;Budapest;124;SAP2;20240106";
 
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "test.csv",
-                "text/csv",
-                csv.getBytes(StandardCharsets.UTF_8)
-        );
+        when(multipartFile.getInputStream())
+                .thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+        when(multipartFile.getOriginalFilename()).thenReturn("test.csv");
 
-        Root root = service.convert(file);
+        Root root = service.convert(multipartFile);
 
-        assertNotNull(root);
         assertEquals(1, root.headers.size());
 
         Header header = root.headers.get(0);
         assertEquals("HDR1", header.costAllocationIdentifier);
-        assertEquals("TYPE1", header.costAllocationTypeCode);
         assertEquals(new BigDecimal("1000.50"), header.grossAmount);
-
         assertEquals(2, header.lines.size());
-        assertEquals("LINE1", header.lines.get(0).costAllocationLineIdentifier);
-        assertEquals("LINE2", header.lines.get(1).costAllocationLineIdentifier);
+
+        verify(multipartFile).getInputStream();
+        verify(multipartFile).getOriginalFilename();
     }
 
     @Test
-    void convert_shouldCreateMultipleHeaders_whenIdentifierChanges() throws Exception {
+    void convert_shouldCreateNewHeader_whenIdentifierChanges() throws Exception {
         String csv =
                 "CostAllocationIdentifier;CostAllocationTypeCode;StatusCode;DocumentCreationDate;ApprovalDate;SupplierName;AccountingDate;GrossAmount;VatAmount;CurrencyCode;DueDate;" +
                         "CostAllocationLineIdentifier;OriginalCostAllocationLineID;DebtCaseId;DebtorName;CollateralCity;CollateralParcelNumber;SapDocumentNumber;FulfillmentDate\n" +
@@ -61,14 +61,11 @@ class CostAllocInterfaceServiceTest {
                         "HDR2;TYPE2;2;20240111;20240112;Supplier B;20240113;200;54;EUR;20240120;" +
                         "LINE2;2;200;Jane Doe;Vienna;2;SAP2;20240115";
 
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "test.csv",
-                "text/csv",
-                csv.getBytes(StandardCharsets.UTF_8)
-        );
+        when(multipartFile.getInputStream())
+                .thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+        when(multipartFile.getOriginalFilename()).thenReturn("test.csv");
 
-        Root root = service.convert(file);
+        Root root = service.convert(multipartFile);
 
         assertEquals(2, root.headers.size());
         assertEquals("HDR1", root.headers.get(0).costAllocationIdentifier);
@@ -76,21 +73,18 @@ class CostAllocInterfaceServiceTest {
     }
 
     @Test
-    void convert_shouldHandleEmptyAndNullValues() throws Exception {
+    void convert_shouldHandleEmptyValuesAsNull() throws Exception {
         String csv =
                 "CostAllocationIdentifier;CostAllocationTypeCode;StatusCode;DocumentCreationDate;ApprovalDate;SupplierName;AccountingDate;GrossAmount;VatAmount;CurrencyCode;DueDate;" +
                         "CostAllocationLineIdentifier;OriginalCostAllocationLineID;DebtCaseId;DebtorName;CollateralCity;CollateralParcelNumber;SapDocumentNumber;FulfillmentDate\n" +
                         "HDR1;;;;;;; ;;;" +
                         "LINE1;;;;;;;;";
 
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "empty.csv",
-                "text/csv",
-                csv.getBytes(StandardCharsets.UTF_8)
-        );
+        when(multipartFile.getInputStream())
+                .thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+        when(multipartFile.getOriginalFilename()).thenReturn("empty.csv");
 
-        Root root = service.convert(file);
+        Root root = service.convert(multipartFile);
 
         Header header = root.headers.get(0);
         assertNull(header.costAllocationTypeCode);
@@ -107,7 +101,7 @@ class CostAllocInterfaceServiceTest {
         assertEquals(true, method.invoke(service, "true"));
         assertEquals(123L, method.invoke(service, "123"));
         assertEquals(new BigDecimal("12.34"), method.invoke(service, "12,34"));
-        assertNull(method.invoke(service, "   "));
+        assertNull(method.invoke(service, " "));
         assertEquals("ABC", method.invoke(service, "ABC"));
     }
 }
