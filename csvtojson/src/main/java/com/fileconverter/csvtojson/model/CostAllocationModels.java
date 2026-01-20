@@ -1,5 +1,6 @@
 package com.fileconverter.csvtojson.model;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,33 +10,61 @@ public class CostAllocationModels {
         public List<Header> headers = new ArrayList<>();
     }
 
+    @JsonPropertyOrder({
+            "costAllocationIdentifier",
+            "costAllocationTypeCode",
+            "statusCode",
+            "documentCreationDate",
+            "approvalDate",
+            "supplierName",
+            "accountingDate",
+            "grossAmount",
+            "vatAmount",
+            "currencyCode",
+            "dueDate",
+            "lines"
+    })
     public static class Header {
-        public String costAllocationIdentifier;
-        public String costAllocationTypeCode;
-        public String statusCode;
-        public String documentCreationDate;
-        public String approvalDate;
-        public String supplierName;
-        public String accountingDate;
-        public String grossAmount;
-        public String vatAmount;
-        public String currencyCode;
-        public String dueDate;
+        public Object costAllocationIdentifier;
+        public Object costAllocationTypeCode;
+        public Object statusCode;
+        public Object documentCreationDate;
+        public Object approvalDate;
+        public Object supplierName;
+        public Object accountingDate;
+        public Object grossAmount;
+        public Object vatAmount;
+        public Object currencyCode;
+        public Object dueDate;
         public List<Line> lines = new ArrayList<>();
     }
 
+    @JsonPropertyOrder({
+            "costAllocationLineIdentifier",
+            "originalCostAllocationLineId",
+            "statusCode",
+            "grossAmount",
+            "vatAmount",
+            "currencyCode",
+            "debtCaseId",
+            "debtorName",
+            "collateralCity",
+            "collateralParcelNumber",
+            "sapDocumentNumber",
+            "fulfillmentDate"
+    })
     public static class Line {
-        public String costAllocationLineIdentifier;
-        public String originalCostAllocationLineId;
-        public String statusCode;
-        public String grossAmount;
-        public String vatAmount;
-        public String currencyCode;
-        public String debtCaseId;
-        public String debtorName;
-        public String collateralCity;
-        public String collateralParcelNumber;
-        public String sapDocumentNumber;
-        public String fulfillmentDate;
+        public Object costAllocationLineIdentifier;
+        public Object originalCostAllocationLineId;
+        public Object statusCode;
+        public Object grossAmount;
+        public Object vatAmount;
+        public Object currencyCode;
+        public Object debtCaseId;
+        public Object debtorName;
+        public Object collateralCity;
+        public Object collateralParcelNumber;
+        public Object sapDocumentNumber;
+        public Object fulfillmentDate;
     }
 }

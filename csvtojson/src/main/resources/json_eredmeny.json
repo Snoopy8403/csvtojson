@@ -1,0 +1,290 @@
+{
+    "headers": [
+        {
+            "costAllocationIdentifier": 658045,
+            "costAllocationTypeCode": 265,
+            "statusCode": 7,
+            "documentCreationDate": "2024.09.03 7:20",
+            "approvalDate": "2025.02.04 15:03",
+            "supplierName": "NMKR NRNM RNVPR VOGACHMJTEP",
+            "accountingDate": "2024.09.03 0:00",
+            "grossAmount": 78590,
+            "vatAmount": 0,
+            "currencyCode": null,
+            "dueDate": "2024.10.04",
+            "lines": [
+                {
+                    "costAllocationLineIdentifier": 2882379,
+                    "originalCostAllocationLineId": null,
+                    "statusCode": 7,
+                    "grossAmount": 78590,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 1000256405,
+                    "debtorName": "JAMN TPJRA MLJCAT",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": 3500373260,
+                    "fulfillmentDate": "2024.09.03"
+                },
+                {
+                    "costAllocationLineIdentifier": 2956941,
+                    "originalCostAllocationLineId": 3080460,
+                    "statusCode": 7,
+                    "grossAmount": 29267,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 91031778,
+                    "debtorName": "JMLNLSNO SRVNCS SAPSLTPNM",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": 662007,
+                    "fulfillmentDate": "2025.02.06"
+                },
+                {
+                    "costAllocationLineIdentifier": 2978312,
+                    "originalCostAllocationLineId": null,
+                    "statusCode": 7,
+                    "grossAmount": 7469,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 1000284690,
+                    "debtorName": "LUNG MTTPLM",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": 3500425413,
+                    "fulfillmentDate": "2025.03.26"
+                },
+                {
+                    "costAllocationLineIdentifier": 2983851,
+                    "originalCostAllocationLineId": null,
+                    "statusCode": 7,
+                    "grossAmount": 17496,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 98823560,
+                    "debtorName": "FMASMS JNNRS",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": 3500427744,
+                    "fulfillmentDate": "2025.04.07"
+                },
+                {
+                    "costAllocationLineIdentifier": 2985610,
+                    "originalCostAllocationLineId": null,
+                    "statusCode": 7,
+                    "grossAmount": 40709,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 1000039664,
+                    "debtorName": "CSMNYM AEJCAT FCACNC",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": 3500429210,
+                    "fulfillmentDate": "2025.04.14"
+                }
+            ]
+        },
+        {
+            "costAllocationIdentifier": 664609,
+            "costAllocationTypeCode": 266,
+            "statusCode": 7,
+            "documentCreationDate": "2025.05.20 9:06",
+            "approvalDate": "2025.05.06 12:33",
+            "supplierName": "FCACNCLP OS TNASMP VOGACHMJTE PARRM",
+            "accountingDate": "2025.05.20 0:00",
+            "grossAmount": 1209,
+            "vatAmount": 0,
+            "currencyCode": null,
+            "dueDate": "2025.06.20",
+            "lines": [
+                {
+                    "costAllocationLineIdentifier": 3000338,
+                    "originalCostAllocationLineId": null,
+                    "statusCode": 7,
+                    "grossAmount": 1209,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 1000280107,
+                    "debtorName": "HMJNML MMAPMNNM",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": 3500436471,
+                    "fulfillmentDate": "2025.05.20"
+                },
+                {
+                    "costAllocationLineIdentifier": 3068160,
+                    "originalCostAllocationLineId": null,
+                    "statusCode": 7,
+                    "grossAmount": 217,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 98317449,
+                    "debtorName": "MNTML CSMJM",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": 3500471678,
+                    "fulfillmentDate": "2025.09.23"
+                },
+                {
+                    "costAllocationLineIdentifier": 3072225,
+                    "originalCostAllocationLineId": 3117782,
+                    "statusCode": 7,
+                    "grossAmount": 5000,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 1000050262,
+                    "debtorName": "HRMRSP JUHO",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": null,
+                    "fulfillmentDate": "2025.10.07"
+                },
+                {
+                    "costAllocationLineIdentifier": 3072302,
+                    "originalCostAllocationLineId": 3117781,
+                    "statusCode": 7,
+                    "grossAmount": 5000,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 1000040950,
+                    "debtorName": "HRMRSP JUHO",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": null,
+                    "fulfillmentDate": "2025.10.07"
+                },
+                {
+                    "costAllocationLineIdentifier": 3072575,
+                    "originalCostAllocationLineId": 3117780,
+                    "statusCode": 7,
+                    "grossAmount": 12000,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 1000040950,
+                    "debtorName": "HRMRSP JUHO",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": 668480,
+                    "fulfillmentDate": "2025.10.06"
+                }
+            ]
+        },
+        {
+            "costAllocationIdentifier": 668480,
+            "costAllocationTypeCode": 259,
+            "statusCode": 7,
+            "documentCreationDate": "2025.10.02 23:00",
+            "approvalDate": "2025.10.06 17:46",
+            "supplierName": null,
+            "accountingDate": "2025.10.21 7:49",
+            "grossAmount": 12000,
+            "vatAmount": 0,
+            "currencyCode": null,
+            "dueDate": "2025.11.21",
+            "lines": [
+                {
+                    "costAllocationLineIdentifier": 3072607,
+                    "originalCostAllocationLineId": 3117783,
+                    "statusCode": 7,
+                    "grossAmount": 12000,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 1000050262,
+                    "debtorName": "HRMRSP JUHO",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": 668480,
+                    "fulfillmentDate": "2025.10.06"
+                }
+            ]
+        },
+        {
+            "costAllocationIdentifier": 668751,
+            "costAllocationTypeCode": 266,
+            "statusCode": 8,
+            "documentCreationDate": "2025.10.14 10:54",
+            "approvalDate": null,
+            "supplierName": "CCSCAT MTTPLM VOGACHMJTEP",
+            "accountingDate": "2025.10.14 0:00",
+            "grossAmount": -217,
+            "vatAmount": 0,
+            "currencyCode": null,
+            "dueDate": "2025.11.14",
+            "lines": [
+                {
+                    "costAllocationLineIdentifier": 3076774,
+                    "originalCostAllocationLineId": 3068160,
+                    "statusCode": 8,
+                    "grossAmount": -217,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 98317449,
+                    "debtorName": "MNTML CSMJM",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": 3500477593,
+                    "fulfillmentDate": "2025.09.23"
+                }
+            ]
+        },
+        {
+            "costAllocationIdentifier": 668779,
+            "costAllocationTypeCode": 266,
+            "statusCode": 8,
+            "documentCreationDate": "2025.10.14 14:34",
+            "approvalDate": null,
+            "supplierName": "NMKR NNNRRA VOGACHMJTEP PARRNJM",
+            "accountingDate": "2025.10.14 0:00",
+            "grossAmount": -7469,
+            "vatAmount": 0,
+            "currencyCode": null,
+            "dueDate": "2025.11.14",
+            "lines": [
+                {
+                    "costAllocationLineIdentifier": 3076897,
+                    "originalCostAllocationLineId": 2978312,
+                    "statusCode": 8,
+                    "grossAmount": -7469,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 1000284690,
+                    "debtorName": "LUNG MTTPLM",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": 3500477684,
+                    "fulfillmentDate": "2025.03.26"
+                }
+            ]
+        },
+        {
+            "costAllocationIdentifier": 668792,
+            "costAllocationTypeCode": 266,
+            "statusCode": 8,
+            "documentCreationDate": "2025.10.14 15:44",
+            "approvalDate": null,
+            "supplierName": "JNNS TPJRA VOGACHMJTEP PARRNJM",
+            "accountingDate": "2025.10.14 0:00",
+            "grossAmount": -40709,
+            "vatAmount": 0,
+            "currencyCode": null,
+            "dueDate": "2025.11.14",
+            "lines": [
+                {
+                    "costAllocationLineIdentifier": 3076959,
+                    "originalCostAllocationLineId": 2985610,
+                    "statusCode": 8,
+                    "grossAmount": -40709,
+                    "vatAmount": 0,
+                    "currencyCode": null,
+                    "debtCaseId": 1000039664,
+                    "debtorName": "CSMNYM AEJCAT FCACNC",
+                    "collateralCity": null,
+                    "collateralParcelNumber": null,
+                    "sapDocumentNumber": 3500477735,
+                    "fulfillmentDate": "2025.04.14"
+                }
+            ]
+        }
+    ]
+}

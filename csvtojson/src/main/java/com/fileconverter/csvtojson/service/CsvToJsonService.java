@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 
 @Service
 public class CsvToJsonService {
@@ -25,47 +26,84 @@ public class CsvToJsonService {
 
         for (CSVRecord record : parser) {
 
-            String currentHeaderId = record.get("CostAllocationIdentifier");
+            String headerIdRaw = record.get("CostAllocationIdentifier");
 
-            // ÚJ HEADER KEZDŐDIK
-            if (currentHeader == null || !currentHeaderId.equals(previousHeaderId)) {
+            if (currentHeader == null || !headerIdRaw.equals(previousHeaderId)) {
 
                 currentHeader = new Header();
-                currentHeader.costAllocationIdentifier = currentHeaderId;
-                currentHeader.costAllocationTypeCode = record.get("CostAllocationTypeCode");
-                currentHeader.statusCode = record.get("StatusCode");
-                currentHeader.documentCreationDate = record.get("DocumentCreationDate");
-                currentHeader.approvalDate = record.get("ApprovalDate");
-                currentHeader.supplierName = record.get("SupplierName");
-                currentHeader.accountingDate = record.get("AccountingDate");
-                currentHeader.grossAmount = record.get("GrossAmount");
-                currentHeader.vatAmount = record.get("VatAmount");
-                currentHeader.currencyCode = record.get("CurrencyCode");
-                currentHeader.dueDate = record.get("DueDate");
+                currentHeader.costAllocationIdentifier = parseValue(headerIdRaw);
+                currentHeader.costAllocationTypeCode = parseValue(record.get("CostAllocationTypeCode"));
+                currentHeader.statusCode = parseValue(record.get("StatusCode"));
+                currentHeader.documentCreationDate = parseValue(record.get("DocumentCreationDate"));
+                currentHeader.approvalDate = parseValue(record.get("ApprovalDate"));
+                currentHeader.supplierName = parseValue(record.get("SupplierName"));
+                currentHeader.accountingDate = parseValue(record.get("AccountingDate"));
+                currentHeader.grossAmount = parseValue(record.get("GrossAmount"));
+                currentHeader.vatAmount = parseValue(record.get("VatAmount"));
+                currentHeader.currencyCode = parseValue(record.get("CurrencyCode"));
+                currentHeader.dueDate = parseValue(record.get("DueDate"));
 
                 root.headers.add(currentHeader);
             }
 
-            // LINE HOZZÁADÁSA
             Line line = new Line();
-            line.costAllocationLineIdentifier = record.get("CostAllocationLineIdentifier");
-            line.originalCostAllocationLineId = record.get("OriginalCostAllocationLineID");
-            line.statusCode = record.get("LineStatusCode");
-            line.grossAmount = record.get("LineGrossAmount");
-            line.vatAmount = record.get("LineVatAmount");
-            line.currencyCode = record.get("LineCurrencyCode");
-            line.debtCaseId = record.get("DebtCaseId");
-            line.debtorName = record.get("DebtorName");
-            line.collateralCity = record.get("CollateralCity");
-            line.collateralParcelNumber = record.get("CollateralParcelNumber");
-            line.sapDocumentNumber = record.get("SapDocumentNumber");
-            line.fulfillmentDate = record.get("FulfillmentDate");
+            line.costAllocationLineIdentifier = parseValue(record.get("CostAllocationLineIdentifier"));
+            line.originalCostAllocationLineId = parseValue(record.get("OriginalCostAllocationLineID"));
+            line.statusCode = parseValue(record.get("StatusCode"));
+            line.grossAmount = parseValue(record.get("GrossAmount"));
+            line.vatAmount = parseValue(record.get("VatAmount"));
+            line.currencyCode = parseValue(record.get("CurrencyCode"));
+            line.debtCaseId = parseValue(record.get("DebtCaseId"));
+            line.debtorName = parseValue(record.get("DebtorName"));
+            line.collateralCity = parseValue(record.get("CollateralCity"));
+            line.collateralParcelNumber = parseValue(record.get("CollateralParcelNumber"));
+            line.sapDocumentNumber = parseValue(record.get("SapDocumentNumber"));
+            line.fulfillmentDate = parseValue(record.get("FulfillmentDate"));
 
             currentHeader.lines.add(line);
 
-            previousHeaderId = currentHeaderId;
+            previousHeaderId = headerIdRaw;
         }
 
         return root;
+    }
+
+    /**
+     * 🔍 Dinamikus típusfelismerés
+     */
+    private Object parseValue(String value) {
+
+        if (value == null) {
+            return null;
+        }
+
+        String v = value.trim();
+        if (v.isEmpty()) {
+            return null;
+        }
+
+        // Boolean
+        if ("true".equalsIgnoreCase(v) || "false".equalsIgnoreCase(v)) {
+            return Boolean.valueOf(v);
+        }
+
+        // Integer (Long)
+        if (v.matches("[-+]?\\d+")) {
+            try {
+                return Long.valueOf(v);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        // Decimal
+        if (v.matches("[-+]?\\d+[\\.,]\\d+")) {
+            try {
+                return new BigDecimal(v.replace(",", "."));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        // Fallback: String
+        return v;
     }
 }
