@@ -1,18 +1,18 @@
 package com.fileconverter.csvtojson.controller;
 
-import com.fileconverter.csvtojson.model.CostAllocationModels.Root;
-import com.fileconverter.csvtojson.service.CsvToJsonService;
+import com.fileconverter.csvtojson.model.CostAllocInterface.Root;
+import com.fileconverter.csvtojson.service.CostAllocInterfaceService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api")
-public class CsvController {
+public class CostAllocInterfaceController {
 
-    private final CsvToJsonService service;
+    private final CostAllocInterfaceService service;
 
-    public CsvController(CsvToJsonService service) {
+    public CostAllocInterfaceController(CostAllocInterfaceService service) {
         this.service = service;
     }
 

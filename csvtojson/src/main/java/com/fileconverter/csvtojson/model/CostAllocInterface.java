@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CostAllocationModels {
+public class CostAllocInterface {
 
     public static class Root {
         public List<Header> headers = new ArrayList<>();

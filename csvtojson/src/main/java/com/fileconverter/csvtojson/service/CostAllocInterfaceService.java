@@ -1,6 +1,6 @@
 package com.fileconverter.csvtojson.service;
 
-import com.fileconverter.csvtojson.model.CostAllocationModels.*;
+import com.fileconverter.csvtojson.model.CostAllocInterface.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.*;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ import java.math.BigDecimal;
  */
 @Slf4j
 @Service
-public class CsvToJsonService {
+public class CostAllocInterfaceService {
 
     public Root convert(MultipartFile file) throws Exception {
         log.info("Fileprocessing started: {}", file.getOriginalFilename());
