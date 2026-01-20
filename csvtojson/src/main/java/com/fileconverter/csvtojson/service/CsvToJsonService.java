@@ -1,6 +1,7 @@
 package com.fileconverter.csvtojson.service;
 
 import com.fileconverter.csvtojson.model.CostAllocationModels.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -8,11 +9,16 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 
+/**
+ * Ideiglenesen használt service, addig amíg a végleges INCASSO -> ORCA interface nem készül el.
+ * A költségterhelés CSV fájlt JSON struktúrává alakító szolgáltatás. Spleciális erre lett kialakítva, nem használható álltalános célra.
+ */
+@Slf4j
 @Service
 public class CsvToJsonService {
 
     public Root convert(MultipartFile file) throws Exception {
-
+        log.info("Fileprocessing started: {}", file.getOriginalFilename());
         CSVParser parser = CSVFormat.DEFAULT
                 .withDelimiter(';')
                 .withFirstRecordAsHeader()
@@ -69,7 +75,7 @@ public class CsvToJsonService {
     }
 
     /**
-     * 🔍 Dinamikus típusfelismerés
+     * Type inference for CSV values: Boolean, Long, BigDecimal, String
      */
     private Object parseValue(String value) {
 
@@ -103,7 +109,6 @@ public class CsvToJsonService {
             }
         }
 
-        // Fallback: String
         return v;
     }
 }
