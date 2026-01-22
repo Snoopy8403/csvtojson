@@ -1,5 +1,7 @@
 package com.fileconverter.csvtojson;
 
+import com.fileconverter.csvtojson.model.CostAllocInterface.Header;
+import com.fileconverter.csvtojson.model.CostAllocInterface.Root;
 import com.fileconverter.csvtojson.service.CostAllocInterfaceService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,9 +48,6 @@ class CostAllocInterfaceServiceTest {
         assertEquals("HDR1", header.costAllocationIdentifier);
         assertEquals(new BigDecimal("1000.50"), header.grossAmount);
         assertEquals(2, header.lines.size());
-
-        verify(multipartFile).getInputStream();
-        verify(multipartFile).getOriginalFilename();
     }
 
     @Test
@@ -73,12 +72,12 @@ class CostAllocInterfaceServiceTest {
     }
 
     @Test
-    void convert_shouldHandleEmptyValuesAsNull() throws Exception {
+    void convert_shouldHandleEmptyAndNullValuesAsNull() throws Exception {
         String csv =
                 "CostAllocationIdentifier;CostAllocationTypeCode;StatusCode;DocumentCreationDate;ApprovalDate;SupplierName;AccountingDate;GrossAmount;VatAmount;CurrencyCode;DueDate;" +
                         "CostAllocationLineIdentifier;OriginalCostAllocationLineID;DebtCaseId;DebtorName;CollateralCity;CollateralParcelNumber;SapDocumentNumber;FulfillmentDate\n" +
-                        "HDR1;;;;;;; ;;;" +
-                        "LINE1;;;;;;;;";
+                        "HDR1;;;;;;;NULL;;;;" +
+                        "LINE1;NULL;;;;;;;";
 
         when(multipartFile.getInputStream())
                 .thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
@@ -87,13 +86,15 @@ class CostAllocInterfaceServiceTest {
         Root root = service.convert(multipartFile);
 
         Header header = root.headers.get(0);
+
         assertNull(header.costAllocationTypeCode);
         assertNull(header.grossAmount);
         assertEquals(1, header.lines.size());
+        assertNull(header.lines.get(0).originalCostAllocationLineId);
     }
 
     @Test
-    void parseValue_shouldInferCorrectTypes() throws Exception {
+    void parseValue_shouldInferCorrectTypesAndHandleNullLiteral() throws Exception {
         var method = CostAllocInterfaceService.class
                 .getDeclaredMethod("parseValue", String.class);
         method.setAccessible(true);
@@ -102,6 +103,8 @@ class CostAllocInterfaceServiceTest {
         assertEquals(123L, method.invoke(service, "123"));
         assertEquals(new BigDecimal("12.34"), method.invoke(service, "12,34"));
         assertNull(method.invoke(service, " "));
+        assertNull(method.invoke(service, "NULL"));
+        assertNull(method.invoke(service, "null"));
         assertEquals("ABC", method.invoke(service, "ABC"));
     }
 }

@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 
 /**
  * Ideiglenesen használt service, addig amíg a végleges INCASSO -> ORCA interface nem készül el.
- * A költségterhelés CSV fájlt JSON struktúrává alakító szolgáltatás. Spleciális erre lett kialakítva, nem használható álltalános célra.
+ * A költségterhelés CSV fájlt JSON struktúrává alakító szolgáltatás.
  */
 @Slf4j
 @Service
@@ -19,10 +19,12 @@ public class CostAllocInterfaceService {
 
     public Root convert(MultipartFile file) throws Exception {
         log.info("Fileprocessing started: {}", file.getOriginalFilename());
+
         CSVParser parser = CSVFormat.DEFAULT
                 .withDelimiter(';')
                 .withFirstRecordAsHeader()
                 .withTrim()
+                .withIgnoreSurroundingSpaces()
                 .parse(new InputStreamReader(file.getInputStream()));
 
         Root root = new Root();
@@ -30,48 +32,62 @@ public class CostAllocInterfaceService {
         Header currentHeader = null;
         String previousHeaderId = null;
 
-        for (CSVRecord record : parser) {
+        for (CSVRecord csvRecord : parser) {
 
-            String headerIdRaw = record.get("CostAllocationIdentifier");
+            String headerIdRaw = getSafe(csvRecord, "CostAllocationIdentifier");
+
+            if (headerIdRaw == null) {
+                log.warn("Missing CostAllocationIdentifier at record {}", csvRecord.getRecordNumber());
+                continue;
+            }
 
             if (currentHeader == null || !headerIdRaw.equals(previousHeaderId)) {
 
                 currentHeader = new Header();
                 currentHeader.costAllocationIdentifier = parseValue(headerIdRaw);
-                currentHeader.costAllocationTypeCode = parseValue(record.get("CostAllocationTypeCode"));
-                currentHeader.statusCode = parseValue(record.get("StatusCode"));
-                currentHeader.documentCreationDate = parseValue(record.get("DocumentCreationDate"));
-                currentHeader.approvalDate = parseValue(record.get("ApprovalDate"));
-                currentHeader.supplierName = parseValue(record.get("SupplierName"));
-                currentHeader.accountingDate = parseValue(record.get("AccountingDate"));
-                currentHeader.grossAmount = parseValue(record.get("GrossAmount"));
-                currentHeader.vatAmount = parseValue(record.get("VatAmount"));
-                currentHeader.currencyCode = parseValue(record.get("CurrencyCode"));
-                currentHeader.dueDate = parseValue(record.get("DueDate"));
+                currentHeader.costAllocationTypeCode = parseValue(getSafe(csvRecord, "CostAllocationTypeCode"));
+                currentHeader.statusCode = parseValue(getSafe(csvRecord, "StatusCode"));
+                currentHeader.documentCreationDate = parseValue(getSafe(csvRecord, "DocumentCreationDate"));
+                currentHeader.approvalDate = parseValue(getSafe(csvRecord, "ApprovalDate"));
+                currentHeader.supplierName = parseValue(getSafe(csvRecord, "SupplierName"));
+                currentHeader.accountingDate = parseValue(getSafe(csvRecord, "AccountingDate"));
+                currentHeader.grossAmount = parseValue(getSafe(csvRecord, "GrossAmount"));
+                currentHeader.vatAmount = parseValue(getSafe(csvRecord, "VatAmount"));
+                currentHeader.currencyCode = parseValue(getSafe(csvRecord, "CurrencyCode"));
+                currentHeader.dueDate = parseValue(getSafe(csvRecord, "DueDate"));
 
                 root.headers.add(currentHeader);
             }
 
             Line line = new Line();
-            line.costAllocationLineIdentifier = parseValue(record.get("CostAllocationLineIdentifier"));
-            line.originalCostAllocationLineId = parseValue(record.get("OriginalCostAllocationLineID"));
-            line.statusCode = parseValue(record.get("StatusCode"));
-            line.grossAmount = parseValue(record.get("GrossAmount"));
-            line.vatAmount = parseValue(record.get("VatAmount"));
-            line.currencyCode = parseValue(record.get("CurrencyCode"));
-            line.debtCaseId = parseValue(record.get("DebtCaseId"));
-            line.debtorName = parseValue(record.get("DebtorName"));
-            line.collateralCity = parseValue(record.get("CollateralCity"));
-            line.collateralParcelNumber = parseValue(record.get("CollateralParcelNumber"));
-            line.sapDocumentNumber = parseValue(record.get("SapDocumentNumber"));
-            line.fulfillmentDate = parseValue(record.get("FulfillmentDate"));
+            line.costAllocationLineIdentifier = parseValue(getSafe(csvRecord, "CostAllocationLineIdentifier"));
+            line.originalCostAllocationLineId = parseValue(getSafe(csvRecord, "OriginalCostAllocationLineID"));
+            line.statusCode = parseValue(getSafe(csvRecord, "StatusCode"));
+            line.grossAmount = parseValue(getSafe(csvRecord, "GrossAmount"));
+            line.vatAmount = parseValue(getSafe(csvRecord, "VatAmount"));
+            line.currencyCode = parseValue(getSafe(csvRecord, "CurrencyCode"));
+            line.debtCaseId = parseValue(getSafe(csvRecord, "DebtCaseId"));
+            line.debtorName = parseValue(getSafe(csvRecord, "DebtorName"));
+            line.collateralCity = parseValue(getSafe(csvRecord, "CollateralCity"));
+            line.collateralParcelNumber = parseValue(getSafe(csvRecord, "CollateralParcelNumber"));
+            line.sapDocumentNumber = parseValue(getSafe(csvRecord, "SapDocumentNumber"));
+            line.fulfillmentDate = parseValue(getSafe(csvRecord, "FulfillmentDate"));
 
             currentHeader.lines.add(line);
-
             previousHeaderId = headerIdRaw;
         }
 
         return root;
+    }
+
+    /**
+     * Biztonságos CSV mező lekérés – nem dob kivételt hiányzó oszlopnál
+     */
+    private String getSafe(CSVRecord record, String column) {
+        if (record.isMapped(column) && record.isSet(column)) {
+            return record.get(column);
+        }
+        return null;
     }
 
     /**
@@ -84,7 +100,9 @@ public class CostAllocInterfaceService {
         }
 
         String v = value.trim();
-        if (v.isEmpty()) {
+
+        // NULL, null, üres -> null
+        if (v.isEmpty() || "null".equalsIgnoreCase(v)) {
             return null;
         }
 
