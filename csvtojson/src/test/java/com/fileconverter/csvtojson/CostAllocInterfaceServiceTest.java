@@ -1,7 +1,7 @@
 package com.fileconverter.csvtojson;
 
-import com.fileconverter.csvtojson.model.CostAllocInterface.Header;
-import com.fileconverter.csvtojson.model.CostAllocInterface.Root;
+import com.fileconverter.csvtojson.model.CostAllocInterfaceDto.Header;
+import com.fileconverter.csvtojson.model.CostAllocInterfaceDto.Root;
 import com.fileconverter.csvtojson.service.CostAllocInterfaceService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

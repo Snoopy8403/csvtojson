@@ -1,10 +1,18 @@
 package com.fileconverter.csvtojson.model;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class CostAllocInterface {
+@Data
+@AllArgsConstructor
+@Accessors(chain = true)
+public class CostAllocInterfaceDto {
 
     public static class Root {
         public List<Header> headers = new ArrayList<>();

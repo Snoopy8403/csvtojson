@@ -1,6 +1,6 @@
 package com.fileconverter.csvtojson.service;
 
-import com.fileconverter.csvtojson.model.CostAllocInterface.*;
+import com.fileconverter.csvtojson.model.CostAllocInterfaceDto.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.*;
 import org.springframework.stereotype.Service;
@@ -81,7 +81,7 @@ public class CostAllocInterfaceService {
     }
 
     /**
-     * Biztonságos CSV mező lekérés – nem dob kivételt hiányzó oszlopnál
+     * “If the field is empty, it does not throw an exception.
      */
     private String getSafe(CSVRecord record, String column) {
         if (record.isMapped(column) && record.isSet(column)) {
@@ -101,7 +101,7 @@ public class CostAllocInterfaceService {
 
         String v = value.trim();
 
-        // NULL, null, üres -> null
+        // NULL, null, empty -> null
         if (v.isEmpty() || "null".equalsIgnoreCase(v)) {
             return null;
         }
@@ -115,7 +115,9 @@ public class CostAllocInterfaceService {
         if (v.matches("[-+]?\\d+")) {
             try {
                 return Long.valueOf(v);
-            } catch (NumberFormatException ignored) {
+            } catch (NumberFormatException e) {
+                log.error("Number format exception (Not Integer): {}", e.toString());
+                throw new RuntimeException("Failed to parse integer value: " + v);
             }
         }
 
@@ -123,7 +125,9 @@ public class CostAllocInterfaceService {
         if (v.matches("[-+]?\\d+[\\.,]\\d+")) {
             try {
                 return new BigDecimal(v.replace(",", "."));
-            } catch (NumberFormatException ignored) {
+            } catch (NumberFormatException e) {
+                log.error("Number format exception (Not Decimal): {}", e.toString());
+                throw new RuntimeException("Failed to parse decimal value: " + v);
             }
         }
 

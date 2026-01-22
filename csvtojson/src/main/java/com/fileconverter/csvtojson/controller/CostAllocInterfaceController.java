@@ -1,6 +1,6 @@
 package com.fileconverter.csvtojson.controller;
 
-import com.fileconverter.csvtojson.model.CostAllocInterface.Root;
+import com.fileconverter.csvtojson.model.CostAllocInterfaceDto.Root;
 import com.fileconverter.csvtojson.service.CostAllocInterfaceService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
