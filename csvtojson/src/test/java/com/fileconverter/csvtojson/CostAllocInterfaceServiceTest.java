@@ -1,6 +1,6 @@
-package com.kesmarki.interfacecatalog.service.costallocinterface;
+package com.fileconverter.csvtojson;
 
-import com.kesmarki.interfacecatalog.domain.costallocinterface.CostAllocInterface.*;
+import com.fileconverter.csvtojson.service.CostAllocInterfaceService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
