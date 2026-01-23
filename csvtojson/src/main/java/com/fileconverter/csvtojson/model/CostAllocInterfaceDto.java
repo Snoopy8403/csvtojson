@@ -1,20 +1,24 @@
 package com.fileconverter.csvtojson.model;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
-@AllArgsConstructor
+@NoArgsConstructor
 @Accessors(chain = true)
 public class CostAllocInterfaceDto {
 
+    @Data
+    @NoArgsConstructor
     public static class Root {
-        public List<Header> headers = new ArrayList<>();
+        private List<Header> headers = new ArrayList<>();
     }
 
     @JsonPropertyOrder({
@@ -31,19 +35,22 @@ public class CostAllocInterfaceDto {
             "dueDate",
             "lines"
     })
+
+    @Data
+    @NoArgsConstructor
     public static class Header {
-        public Long costAllocationIdentifier;
-        public Integer costAllocationTypeCode;
-        public Integer statusCode;
-        public String documentCreationDate;
-        public String approvalDate;
-        public String supplierName;
-        public String accountingDate;
-        public Long grossAmount;
-        public Long vatAmount;
-        public String currencyCode;
-        public String dueDate;
-        public List<Line> lines = new ArrayList<>();
+        private Long costAllocationIdentifier;
+        private Integer costAllocationTypeCode;
+        private Integer statusCode;
+        private String documentCreationDate;
+        private String approvalDate;
+        private String supplierName;
+        private String accountingDate;
+        private Long grossAmount;
+        private Long vatAmount;
+        private String currencyCode;
+        private String dueDate;
+        private List<Line> lines = new ArrayList<>();
     }
 
     @JsonPropertyOrder({
@@ -60,18 +67,21 @@ public class CostAllocInterfaceDto {
             "sapDocumentNumber",
             "fulfillmentDate"
     })
+
+    @Data
+    @NoArgsConstructor
     public static class Line {
-        public Long costAllocationLineIdentifier;
-        public Long originalCostAllocationLineId;
-        public Integer statusCode;
-        public Long grossAmount;
-        public Long vatAmount;
-        public String currencyCode;
-        public Long debtCaseId;
-        public String debtorName;
-        public String collateralCity;
-        public String collateralParcelNumber;
-        public String sapDocumentNumber;
-        public String fulfillmentDate;
+        private Long costAllocationLineIdentifier;
+        private Long originalCostAllocationLineId;
+        private Integer statusCode;
+        private Long grossAmount;
+        private Long vatAmount;
+        private String currencyCode;
+        private Long debtCaseId;
+        private String debtorName;
+        private String collateralCity;
+        private String collateralParcelNumber;
+        private String sapDocumentNumber;
+        private String fulfillmentDate;
     }
 }

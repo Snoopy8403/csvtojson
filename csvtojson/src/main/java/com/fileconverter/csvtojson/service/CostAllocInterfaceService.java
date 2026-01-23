@@ -7,7 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStreamReader;
-import java.math.BigDecimal;
+import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -20,126 +21,100 @@ public class CostAllocInterfaceService {
                 .withDelimiter(';')
                 .withFirstRecordAsHeader()
                 .withTrim()
-                .withIgnoreSurroundingSpaces()
                 .parse(new InputStreamReader(file.getInputStream()));
 
         Root root = new Root();
-
         Header currentHeader = null;
-        Long previousHeaderId = null;
+        String previousHeaderId = null;
 
-        for (CSVRecord record : parser) {
+        for (CSVRecord csvRecord : parser) {
+            String headerIdRaw = getString(csvRecord, "CostAllocationIdentifier");
 
-            Long headerId = getValue(record, "CostAllocationIdentifier", Long.class);
-            if (headerId == null) {
-                log.warn("Missing CostAllocationIdentifier at record {}", record.getRecordNumber());
-                continue;
+            // null-safe összehasonlítás
+            if (currentHeader == null || !Objects.equals(headerIdRaw, previousHeaderId)) {
+                currentHeader = new Header()
+                        .setCostAllocationIdentifier(getLong(csvRecord, "CostAllocationIdentifier"))
+                        .setCostAllocationTypeCode(getInteger(csvRecord, "CostAllocationTypeCode"))
+                        .setStatusCode(getInteger(csvRecord, "StatusCode"))
+                        .setDocumentCreationDate(getString(csvRecord, "DocumentCreationDate"))
+                        .setApprovalDate(getString(csvRecord, "ApprovalDate"))
+                        .setSupplierName(getString(csvRecord, "SupplierName"))
+                        .setAccountingDate(getString(csvRecord, "AccountingDate"))
+                        .setGrossAmount(getLong(csvRecord, "GrossAmount"))
+                        .setVatAmount(getLong(csvRecord, "VatAmount"))
+                        .setCurrencyCode(getString(csvRecord, "CurrencyCode"))
+                        .setDueDate(getString(csvRecord, "DueDate"));
+
+                root.getHeaders().add(currentHeader);
             }
 
-            if (currentHeader == null || !headerId.equals(previousHeaderId)) {
+            Line line = new Line()
+                    .setCostAllocationLineIdentifier(getLong(csvRecord, "CostAllocationLineIdentifier"))
+                    .setOriginalCostAllocationLineId(getLong(csvRecord, "OriginalCostAllocationLineID"))
+                    .setStatusCode(getInteger(csvRecord, "StatusCode"))
+                    .setGrossAmount(getLong(csvRecord, "GrossAmount"))
+                    .setVatAmount(getLong(csvRecord, "VatAmount"))
+                    .setCurrencyCode(getString(csvRecord, "CurrencyCode"))
+                    .setDebtCaseId(getLong(csvRecord, "DebtCaseId"))
+                    .setDebtorName(getString(csvRecord, "DebtorName"))
+                    .setCollateralCity(getString(csvRecord, "CollateralCity"))
+                    .setCollateralParcelNumber(getString(csvRecord, "CollateralParcelNumber"))
+                    .setSapDocumentNumber(getString(csvRecord, "SapDocumentNumber"))
+                    .setFulfillmentDate(getString(csvRecord, "FulfillmentDate"));
 
-                currentHeader = new Header();
-                currentHeader.costAllocationIdentifier =
-                        headerId;
-                currentHeader.costAllocationTypeCode =
-                        getValue(record, "CostAllocationTypeCode", Integer.class);
-                currentHeader.statusCode =
-                        getValue(record, "StatusCode", Integer.class);
-                currentHeader.documentCreationDate =
-                        getValue(record, "DocumentCreationDate", String.class);
-                currentHeader.approvalDate =
-                        getValue(record, "ApprovalDate", String.class);
-                currentHeader.supplierName =
-                        getValue(record, "SupplierName", String.class);
-                currentHeader.accountingDate =
-                        getValue(record, "AccountingDate", String.class);
-                currentHeader.grossAmount =
-                        getValue(record, "GrossAmount", Long.class);
-                currentHeader.vatAmount =
-                        getValue(record, "VatAmount", Long.class);
-                currentHeader.currencyCode =
-                        getValue(record, "CurrencyCode", String.class);
-                currentHeader.dueDate =
-                        getValue(record, "DueDate", String.class);
-
-                root.headers.add(currentHeader);
-            }
-
-            Line line = new Line();
-            line.costAllocationLineIdentifier =
-                    getValue(record, "CostAllocationLineIdentifier", Long.class);
-            line.originalCostAllocationLineId =
-                    getValue(record, "OriginalCostAllocationLineID", Long.class);
-            line.statusCode =
-                    getValue(record, "StatusCode", Integer.class);
-            line.grossAmount =
-                    getValue(record, "GrossAmount", Long.class);
-            line.vatAmount =
-                    getValue(record, "VatAmount", Long.class);
-            line.currencyCode =
-                    getValue(record, "CurrencyCode", String.class);
-            line.debtCaseId =
-                    getValue(record, "DebtCaseId", Long.class);
-            line.debtorName =
-                    getValue(record, "DebtorName", String.class);
-            line.collateralCity =
-                    getValue(record, "CollateralCity", String.class);
-            line.collateralParcelNumber =
-                    getValue(record, "CollateralParcelNumber", String.class);
-            line.sapDocumentNumber =
-                    getValue(record, "SapDocumentNumber", String.class);
-            line.fulfillmentDate =
-                    getValue(record, "FulfillmentDate", String.class);
-
-            currentHeader.lines.add(line);
-            previousHeaderId = headerId;
+            currentHeader.getLines().add(line);
+            previousHeaderId = headerIdRaw;
         }
 
         return root;
     }
 
-    /**
-     * Generic, type-safe CSV value extractor.
-     * Handles missing columns, empty values and "NULL" literals.
-     */
-    private <T> T getValue(CSVRecord record, String column, Class<T> type) {
+    /* ---------- Typed helper methods ---------- */
 
-        if (!record.isMapped(column) || !record.isSet(column)) {
-            return null;
-        }
+    private String getString(CSVRecord csvRecord, String column) {
+        String value = getRaw(csvRecord, column);
+        return value;
+    }
 
-        String raw = record.get(column);
-        if (raw == null) {
-            return null;
-        }
-
-        String v = raw.trim();
-        if (v.isEmpty() || "null".equalsIgnoreCase(v)) {
-            return null;
-        }
+    private Long getLong(CSVRecord csvRecord, String column) {
+        String value = getRaw(csvRecord, column);
+        if (value == null) return null;
 
         try {
-            if (type == String.class) {
-                return type.cast(v);
+            // számoknál vesszőt ponttá alakítunk
+            if (value.contains(",")) value = value.replace(",", ".");
+            if (value.contains(".")) {
+                double d = Double.parseDouble(value);
+                return (long) d; // egész számra castoljuk
             }
-
-            if (type == Integer.class) {
-                return type.cast(Integer.valueOf(v));
-            }
-
-            if (type == Long.class) {
-                return type.cast(
-                        new BigDecimal(v.replace(",", ".")).longValue()
-                );
-            }
-
-        } catch (Exception e) {
-            log.warn(
-                    "Failed to parse column '{}' with value '{}' as {}",
-                    column, v, type.getSimpleName()
-            );
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            return null;
         }
+    }
 
-        return null;
+    private Integer getInteger(CSVRecord csvRecord, String column) {
+        String value = getRaw(csvRecord, column);
+        if (value == null) return null;
+
+        try {
+            return Integer.valueOf(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private String getRaw(CSVRecord csvRecord, String column) {
+        Map<String, Integer> headers = csvRecord.getParser().getHeaderMap();
+
+        if (!headers.containsKey(column)) return null;
+
+        String value = csvRecord.get(column);
+        if (value == null) return null;
+
+        String trimmed = value.trim();
+        if (trimmed.isEmpty() || "NULL".equalsIgnoreCase(trimmed)) return null;
+
+        return trimmed;
     }
 }
