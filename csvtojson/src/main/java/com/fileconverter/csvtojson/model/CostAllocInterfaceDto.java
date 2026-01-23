@@ -3,7 +3,6 @@ package com.fileconverter.csvtojson.model;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
@@ -33,17 +32,17 @@ public class CostAllocInterfaceDto {
             "lines"
     })
     public static class Header {
-        public Object costAllocationIdentifier;
-        public Object costAllocationTypeCode;
-        public Object statusCode;
-        public Object documentCreationDate;
-        public Object approvalDate;
-        public Object supplierName;
-        public Object accountingDate;
-        public Object grossAmount;
-        public Object vatAmount;
-        public Object currencyCode;
-        public Object dueDate;
+        public Long costAllocationIdentifier;
+        public Integer costAllocationTypeCode;
+        public Integer statusCode;
+        public String documentCreationDate;
+        public String approvalDate;
+        public String supplierName;
+        public String accountingDate;
+        public Long grossAmount;
+        public Long vatAmount;
+        public String currencyCode;
+        public String dueDate;
         public List<Line> lines = new ArrayList<>();
     }
 
@@ -62,17 +61,17 @@ public class CostAllocInterfaceDto {
             "fulfillmentDate"
     })
     public static class Line {
-        public Object costAllocationLineIdentifier;
-        public Object originalCostAllocationLineId;
-        public Object statusCode;
-        public Object grossAmount;
-        public Object vatAmount;
-        public Object currencyCode;
-        public Object debtCaseId;
-        public Object debtorName;
-        public Object collateralCity;
-        public Object collateralParcelNumber;
-        public Object sapDocumentNumber;
-        public Object fulfillmentDate;
+        public Long costAllocationLineIdentifier;
+        public Long originalCostAllocationLineId;
+        public Integer statusCode;
+        public Long grossAmount;
+        public Long vatAmount;
+        public String currencyCode;
+        public Long debtCaseId;
+        public String debtorName;
+        public String collateralCity;
+        public String collateralParcelNumber;
+        public String sapDocumentNumber;
+        public String fulfillmentDate;
     }
 }

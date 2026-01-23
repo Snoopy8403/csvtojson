@@ -9,10 +9,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 
-/**
- * Ideiglenesen használt service, addig amíg a végleges INCASSO -> ORCA interface nem készül el.
- * A költségterhelés CSV fájlt JSON struktúrává alakító szolgáltatás.
- */
 @Slf4j
 @Service
 public class CostAllocInterfaceService {
@@ -30,107 +26,120 @@ public class CostAllocInterfaceService {
         Root root = new Root();
 
         Header currentHeader = null;
-        String previousHeaderId = null;
+        Long previousHeaderId = null;
 
-        for (CSVRecord csvRecord : parser) {
+        for (CSVRecord record : parser) {
 
-            String headerIdRaw = getSafe(csvRecord, "CostAllocationIdentifier");
-
-            if (headerIdRaw == null) {
-                log.warn("Missing CostAllocationIdentifier at record {}", csvRecord.getRecordNumber());
+            Long headerId = getValue(record, "CostAllocationIdentifier", Long.class);
+            if (headerId == null) {
+                log.warn("Missing CostAllocationIdentifier at record {}", record.getRecordNumber());
                 continue;
             }
 
-            if (currentHeader == null || !headerIdRaw.equals(previousHeaderId)) {
+            if (currentHeader == null || !headerId.equals(previousHeaderId)) {
 
                 currentHeader = new Header();
-                currentHeader.costAllocationIdentifier = parseValue(headerIdRaw);
-                currentHeader.costAllocationTypeCode = parseValue(getSafe(csvRecord, "CostAllocationTypeCode"));
-                currentHeader.statusCode = parseValue(getSafe(csvRecord, "StatusCode"));
-                currentHeader.documentCreationDate = parseValue(getSafe(csvRecord, "DocumentCreationDate"));
-                currentHeader.approvalDate = parseValue(getSafe(csvRecord, "ApprovalDate"));
-                currentHeader.supplierName = parseValue(getSafe(csvRecord, "SupplierName"));
-                currentHeader.accountingDate = parseValue(getSafe(csvRecord, "AccountingDate"));
-                currentHeader.grossAmount = parseValue(getSafe(csvRecord, "GrossAmount"));
-                currentHeader.vatAmount = parseValue(getSafe(csvRecord, "VatAmount"));
-                currentHeader.currencyCode = parseValue(getSafe(csvRecord, "CurrencyCode"));
-                currentHeader.dueDate = parseValue(getSafe(csvRecord, "DueDate"));
+                currentHeader.costAllocationIdentifier =
+                        headerId;
+                currentHeader.costAllocationTypeCode =
+                        getValue(record, "CostAllocationTypeCode", Integer.class);
+                currentHeader.statusCode =
+                        getValue(record, "StatusCode", Integer.class);
+                currentHeader.documentCreationDate =
+                        getValue(record, "DocumentCreationDate", String.class);
+                currentHeader.approvalDate =
+                        getValue(record, "ApprovalDate", String.class);
+                currentHeader.supplierName =
+                        getValue(record, "SupplierName", String.class);
+                currentHeader.accountingDate =
+                        getValue(record, "AccountingDate", String.class);
+                currentHeader.grossAmount =
+                        getValue(record, "GrossAmount", Long.class);
+                currentHeader.vatAmount =
+                        getValue(record, "VatAmount", Long.class);
+                currentHeader.currencyCode =
+                        getValue(record, "CurrencyCode", String.class);
+                currentHeader.dueDate =
+                        getValue(record, "DueDate", String.class);
 
                 root.headers.add(currentHeader);
             }
 
             Line line = new Line();
-            line.costAllocationLineIdentifier = parseValue(getSafe(csvRecord, "CostAllocationLineIdentifier"));
-            line.originalCostAllocationLineId = parseValue(getSafe(csvRecord, "OriginalCostAllocationLineID"));
-            line.statusCode = parseValue(getSafe(csvRecord, "StatusCode"));
-            line.grossAmount = parseValue(getSafe(csvRecord, "GrossAmount"));
-            line.vatAmount = parseValue(getSafe(csvRecord, "VatAmount"));
-            line.currencyCode = parseValue(getSafe(csvRecord, "CurrencyCode"));
-            line.debtCaseId = parseValue(getSafe(csvRecord, "DebtCaseId"));
-            line.debtorName = parseValue(getSafe(csvRecord, "DebtorName"));
-            line.collateralCity = parseValue(getSafe(csvRecord, "CollateralCity"));
-            line.collateralParcelNumber = parseValue(getSafe(csvRecord, "CollateralParcelNumber"));
-            line.sapDocumentNumber = parseValue(getSafe(csvRecord, "SapDocumentNumber"));
-            line.fulfillmentDate = parseValue(getSafe(csvRecord, "FulfillmentDate"));
+            line.costAllocationLineIdentifier =
+                    getValue(record, "CostAllocationLineIdentifier", Long.class);
+            line.originalCostAllocationLineId =
+                    getValue(record, "OriginalCostAllocationLineID", Long.class);
+            line.statusCode =
+                    getValue(record, "StatusCode", Integer.class);
+            line.grossAmount =
+                    getValue(record, "GrossAmount", Long.class);
+            line.vatAmount =
+                    getValue(record, "VatAmount", Long.class);
+            line.currencyCode =
+                    getValue(record, "CurrencyCode", String.class);
+            line.debtCaseId =
+                    getValue(record, "DebtCaseId", Long.class);
+            line.debtorName =
+                    getValue(record, "DebtorName", String.class);
+            line.collateralCity =
+                    getValue(record, "CollateralCity", String.class);
+            line.collateralParcelNumber =
+                    getValue(record, "CollateralParcelNumber", String.class);
+            line.sapDocumentNumber =
+                    getValue(record, "SapDocumentNumber", String.class);
+            line.fulfillmentDate =
+                    getValue(record, "FulfillmentDate", String.class);
 
             currentHeader.lines.add(line);
-            previousHeaderId = headerIdRaw;
+            previousHeaderId = headerId;
         }
 
         return root;
     }
 
     /**
-     * “If the field is empty, it does not throw an exception.
+     * Generic, type-safe CSV value extractor.
+     * Handles missing columns, empty values and "NULL" literals.
      */
-    private String getSafe(CSVRecord record, String column) {
-        if (record.isMapped(column) && record.isSet(column)) {
-            return record.get(column);
-        }
-        return null;
-    }
+    private <T> T getValue(CSVRecord record, String column, Class<T> type) {
 
-    /**
-     * Type inference for CSV values: Boolean, Long, BigDecimal, String
-     */
-    private Object parseValue(String value) {
-
-        if (value == null) {
+        if (!record.isMapped(column) || !record.isSet(column)) {
             return null;
         }
 
-        String v = value.trim();
+        String raw = record.get(column);
+        if (raw == null) {
+            return null;
+        }
 
-        // NULL, null, empty -> null
+        String v = raw.trim();
         if (v.isEmpty() || "null".equalsIgnoreCase(v)) {
             return null;
         }
 
-        // Boolean
-        if ("true".equalsIgnoreCase(v) || "false".equalsIgnoreCase(v)) {
-            return Boolean.valueOf(v);
-        }
-
-        // Integer (Long)
-        if (v.matches("[-+]?\\d+")) {
-            try {
-                return Long.valueOf(v);
-            } catch (NumberFormatException e) {
-                log.error("Number format exception (Not Integer): {}", e.toString());
-                throw new RuntimeException("Failed to parse integer value: " + v);
+        try {
+            if (type == String.class) {
+                return type.cast(v);
             }
-        }
 
-        // Decimal
-        if (v.matches("[-+]?\\d+[\\.,]\\d+")) {
-            try {
-                return new BigDecimal(v.replace(",", "."));
-            } catch (NumberFormatException e) {
-                log.error("Number format exception (Not Decimal): {}", e.toString());
-                throw new RuntimeException("Failed to parse decimal value: " + v);
+            if (type == Integer.class) {
+                return type.cast(Integer.valueOf(v));
             }
+
+            if (type == Long.class) {
+                return type.cast(
+                        new BigDecimal(v.replace(",", ".")).longValue()
+                );
+            }
+
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to parse column '{}' with value '{}' as {}",
+                    column, v, type.getSimpleName()
+            );
         }
 
-        return v;
+        return null;
     }
 }
