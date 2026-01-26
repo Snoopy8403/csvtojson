@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStreamReader;
-import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
@@ -28,9 +27,9 @@ public class CostAllocInterfaceService {
         String previousHeaderId = null;
 
         for (CSVRecord csvRecord : parser) {
+
             String headerIdRaw = getString(csvRecord, "CostAllocationIdentifier");
 
-            // null-safe összehasonlítás
             if (currentHeader == null || !Objects.equals(headerIdRaw, previousHeaderId)) {
                 currentHeader = new Header()
                         .setCostAllocationIdentifier(getLong(csvRecord, "CostAllocationIdentifier"))
@@ -69,23 +68,20 @@ public class CostAllocInterfaceService {
         return root;
     }
 
-    /* ---------- Typed helper methods ---------- */
+    /* ---------- SAFE typed getters ---------- */
 
-    private String getString(CSVRecord csvRecord, String column) {
-        String value = getRaw(csvRecord, column);
-        return value;
+    private String getString(CSVRecord record, String column) {
+        return getRaw(record, column);
     }
 
-    private Long getLong(CSVRecord csvRecord, String column) {
-        String value = getRaw(csvRecord, column);
+    private Long getLong(CSVRecord record, String column) {
+        String value = getRaw(record, column);
         if (value == null) return null;
 
         try {
-            // számoknál vesszőt ponttá alakítunk
             if (value.contains(",")) value = value.replace(",", ".");
             if (value.contains(".")) {
-                double d = Double.parseDouble(value);
-                return (long) d; // egész számra castoljuk
+                return (long) Double.parseDouble(value);
             }
             return Long.parseLong(value);
         } catch (NumberFormatException e) {
@@ -93,8 +89,8 @@ public class CostAllocInterfaceService {
         }
     }
 
-    private Integer getInteger(CSVRecord csvRecord, String column) {
-        String value = getRaw(csvRecord, column);
+    private Integer getInteger(CSVRecord record, String column) {
+        String value = getRaw(record, column);
         if (value == null) return null;
 
         try {
@@ -104,16 +100,32 @@ public class CostAllocInterfaceService {
         }
     }
 
-    private String getRaw(CSVRecord csvRecord, String column) {
-        Map<String, Integer> headers = csvRecord.getParser().getHeaderMap();
+    /**
+     * 💣 BULLETPROOF CSV ACCESS
+     * - header nincs → null
+     * - rekord rövidebb → null
+     * - üres / "NULL" → null
+     */
+    private String getRaw(CSVRecord record, String column) {
+        if (!record.isMapped(column)) {
+            return null;
+        }
 
-        if (!headers.containsKey(column)) return null;
+        int index = record.getParser().getHeaderMap().get(column);
 
-        String value = csvRecord.get(column);
-        if (value == null) return null;
+        if (index >= record.size()) {
+            return null;
+        }
+
+        String value = record.get(index);
+        if (value == null) {
+            return null;
+        }
 
         String trimmed = value.trim();
-        if (trimmed.isEmpty() || "NULL".equalsIgnoreCase(trimmed)) return null;
+        if (trimmed.isEmpty() || "NULL".equalsIgnoreCase(trimmed)) {
+            return null;
+        }
 
         return trimmed;
     }

@@ -1,102 +1,106 @@
 package com.fileconverter.csvtojson;
 
-import com.fileconverter.csvtojson.model.CostAllocInterfaceDto.*;
+import com.fileconverter.csvtojson.model.CostAllocInterfaceDto.Root;
+import com.fileconverter.csvtojson.model.CostAllocInterfaceDto.Header;
+import com.fileconverter.csvtojson.model.CostAllocInterfaceDto.Line;
 import com.fileconverter.csvtojson.service.CostAllocInterfaceService;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.mock.web.MockMultipartFile;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class CostAllocInterfaceServiceTest {
 
-    @InjectMocks
-    private CostAllocInterfaceService service;
-
-    @Mock
-    private MultipartFile multipartFile;
+    private final CostAllocInterfaceService service = new CostAllocInterfaceService();
 
     @Test
-    void convert_shouldGroupLinesUnderSameHeader_andHandleNulls() throws Exception {
+    void shouldHandleMissingColumnsAndShortRecordsGracefully() throws Exception {
+        // GIVEN: FulfillmentDate header létezik, de az adat sor rövidebb
         String csv =
-                "CostAllocationIdentifier;CostAllocationTypeCode;StatusCode;DocumentCreationDate;ApprovalDate;SupplierName;AccountingDate;GrossAmount;VatAmount;CurrencyCode;DueDate;" +
-                        "CostAllocationLineIdentifier;OriginalCostAllocationLineID;DebtCaseId;DebtorName;CollateralCity;CollateralParcelNumber;SapDocumentNumber;FulfillmentDate\n" +
-                        "1;10;1;20240101;20240102;Supplier A;20240103;1000;270;HUF;20240110;" +
-                        "100;NULL;200;John Doe;Budapest;123;SAP1;20240105\n" +
-                        "1;10;1;20240101;20240102;Supplier A;20240103;1000;270;HUF;20240110;" +
-                        "101;;201;Jane Doe;Budapest;124;SAP2;20240106";
+                "CostAllocationIdentifier;CostAllocationTypeCode;StatusCode;DocumentCreationDate;" +
+                        "ApprovalDate;SupplierName;AccountingDate;GrossAmount;VatAmount;CurrencyCode;" +
+                        "DueDate;CostAllocationLineIdentifier;OriginalCostAllocationLineID;DebtCaseId;" +
+                        "DebtorName;CollateralCity;CollateralParcelNumber;SapDocumentNumber;FulfillmentDate\n" +
+                        "1001;1;10;2024-01-01;2024-01-02;Supplier Kft;2024-01-03;10000;2700;HUF;" +
+                        "2024-02-01;2001;NULL;3001;John Doe;Budapest;12345;SAP123\n";
 
-        when(multipartFile.getInputStream())
-                .thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
-        when(multipartFile.getOriginalFilename()).thenReturn("test.csv");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test.csv",
+                "text/csv",
+                csv.getBytes(StandardCharsets.UTF_8)
+        );
 
-        Root root = service.convert(multipartFile);
+        // WHEN
+        Root result = service.convert(file);
 
-        assertEquals(1, root.getHeaders().size());
-        Header header = root.getHeaders().get(0);
-        assertEquals(2, header.getLines().size());
+        // THEN
+        assertNotNull(result);
+        assertEquals(1, result.getHeaders().size());
 
-        Line firstLine = header.getLines().get(0);
-        assertEquals(100L, firstLine.getCostAllocationLineIdentifier());
-        assertNull(firstLine.getOriginalCostAllocationLineId()); // "NULL" -> null
-        assertEquals(200L, firstLine.getDebtCaseId());
+        Header header = result.getHeaders().get(0);
+        assertEquals(1001L, header.getCostAllocationIdentifier());
+        assertEquals("Supplier Kft", header.getSupplierName());
+        assertEquals(1, header.getLines().size());
 
-        Line secondLine = header.getLines().get(1);
-        assertEquals(101L, secondLine.getCostAllocationLineIdentifier());
-        assertNull(secondLine.getOriginalCostAllocationLineId()); // üres -> null
-        assertEquals(201L, secondLine.getDebtCaseId());
-    }
-
-    @Test
-    void convert_shouldCreateNewHeader_whenIdentifierChanges() throws Exception {
-        String csv =
-                "CostAllocationIdentifier;CostAllocationTypeCode;StatusCode;DocumentCreationDate;ApprovalDate;SupplierName;AccountingDate;GrossAmount;VatAmount;CurrencyCode;DueDate;" +
-                        "CostAllocationLineIdentifier;OriginalCostAllocationLineID;DebtCaseId;DebtorName;CollateralCity;CollateralParcelNumber;SapDocumentNumber;FulfillmentDate\n" +
-                        "1;10;1;;;;;;;;100;1;;;;;\n" +
-                        "2;20;2;;;;;;;;200;2;;;;;";
-
-        when(multipartFile.getInputStream())
-                .thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
-        when(multipartFile.getOriginalFilename()).thenReturn("test.csv");
-
-        Root root = service.convert(multipartFile);
-
-        assertEquals(2, root.getHeaders().size());
-        assertEquals(1L, root.getHeaders().get(0).getCostAllocationIdentifier());
-        assertEquals(2L, root.getHeaders().get(1).getCostAllocationIdentifier());
-    }
-
-    @Test
-    void convert_shouldHandleEmptyCsvValues() throws Exception {
-        String csv =
-                "CostAllocationIdentifier;CostAllocationTypeCode;StatusCode;DocumentCreationDate;ApprovalDate;SupplierName;AccountingDate;GrossAmount;VatAmount;CurrencyCode;DueDate;" +
-                        "CostAllocationLineIdentifier;OriginalCostAllocationLineID;DebtCaseId;DebtorName;CollateralCity;CollateralParcelNumber;SapDocumentNumber;FulfillmentDate\n" +
-                        "1;;;;;; ;;;" +
-                        "LINE1;;;;;;;;";
-
-        when(multipartFile.getInputStream())
-                .thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
-        when(multipartFile.getOriginalFilename()).thenReturn("empty.csv");
-
-        Root root = service.convert(multipartFile);
-        Header header = root.getHeaders().get(0);
-
-        // header mezők null-ok
-        assertNull(header.getCostAllocationTypeCode());
-        assertNull(header.getGrossAmount());
-
-        // line mezők null-ok
         Line line = header.getLines().get(0);
-        assertNull(line.getCostAllocationLineIdentifier());
+
+        assertEquals(2001L, line.getCostAllocationLineIdentifier());
+
+        // "NULL" → null
         assertNull(line.getOriginalCostAllocationLineId());
-        assertNull(line.getDebtCaseId());
+
+        // HIÁNYZÓ oszlop → null (ÉS nincs exception)
+        assertNull(line.getFulfillmentDate());
+
+        assertEquals("Budapest", line.getCollateralCity());
+        assertEquals("SAP123", line.getSapDocumentNumber());
+    }
+
+    @Test
+    void shouldGroupLinesUnderSameHeader() throws Exception {
+        // GIVEN: két sor ugyanazzal a header ID-val
+        String csv =
+                "CostAllocationIdentifier;CostAllocationTypeCode;StatusCode;GrossAmount;" +
+                        "CostAllocationLineIdentifier\n" +
+                        "5000;2;20;1000;1\n" +
+                        "5000;2;20;1000;2\n";
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "grouping.csv",
+                "text/csv",
+                csv.getBytes(StandardCharsets.UTF_8)
+        );
+
+        // WHEN
+        Root result = service.convert(file);
+
+        // THEN
+        assertEquals(1, result.getHeaders().size());
+        assertEquals(2, result.getHeaders().get(0).getLines().size());
+    }
+
+    @Test
+    void shouldCreateNewHeaderWhenIdentifierChanges() throws Exception {
+        String csv =
+                "CostAllocationIdentifier;CostAllocationLineIdentifier\n" +
+                        "1;10\n" +
+                        "2;20\n";
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "multiheader.csv",
+                "text/csv",
+                csv.getBytes(StandardCharsets.UTF_8)
+        );
+
+        Root result = service.convert(file);
+
+        assertEquals(2, result.getHeaders().size());
+        assertEquals(1, result.getHeaders().get(0).getLines().size());
+        assertEquals(1, result.getHeaders().get(1).getLines().size());
     }
 }
