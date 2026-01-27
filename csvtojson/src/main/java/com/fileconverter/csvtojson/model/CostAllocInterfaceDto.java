@@ -2,7 +2,6 @@ package com.fileconverter.csvtojson.model;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -11,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Accessors(chain = true)
 public class CostAllocInterfaceDto {
 
@@ -40,14 +39,14 @@ public class CostAllocInterfaceDto {
     @NoArgsConstructor
     public static class Header {
         private Long costAllocationIdentifier;
-        private Integer costAllocationTypeCode;
-        private Integer statusCode;
+        private Long costAllocationTypeCode;
+        private Long statusCode;
         private String documentCreationDate;
         private String approvalDate;
         private String supplierName;
         private String accountingDate;
-        private Long grossAmount;
-        private Long vatAmount;
+        private Double grossAmount;
+        private Double vatAmount;
         private String currencyCode;
         private String dueDate;
         private List<Line> lines = new ArrayList<>();
@@ -73,9 +72,9 @@ public class CostAllocInterfaceDto {
     public static class Line {
         private Long costAllocationLineIdentifier;
         private Long originalCostAllocationLineId;
-        private Integer statusCode;
-        private Long grossAmount;
-        private Long vatAmount;
+        private Long statusCode;
+        private Double grossAmount;
+        private Double vatAmount;
         private String currencyCode;
         private Long debtCaseId;
         private String debtorName;
