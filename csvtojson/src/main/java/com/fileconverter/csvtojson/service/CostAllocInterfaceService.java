@@ -22,21 +22,22 @@ public class CostAllocInterfaceService {
 
     // Numerikus String → Long konverzió biztonságos ellenőrzéssel
     private final Function<String, Long> stringToLong = text -> {
-        if (!NumberUtils.isCreatable(text)) {
-            log.error(
-                    "Invalid numeric value encountered during parsing to Long: {}" + text
-            );
-            throw new IllegalArgumentException("Invalid numeric value: " + text);
-        }
-        return NumberUtils.createNumber(text).longValue();
+
+        if (text == null) {
+                return null;
+            }
+            if (!NumberUtils.isCreatable(text)) {
+                throw new IllegalArgumentException("Invalid numeric value: " + text);
+            }
+            return NumberUtils.createNumber(text).longValue();
     };
 
     // Numerikus String → Double konverzió biztonságos ellenőrzéssel
     private final Function<String, Double> stringToDouble = text-> {
+        if (text == null) {
+            return null;
+        }
         if (!NumberUtils.isCreatable(text)) {
-            log.error(
-                    "Invalid numeric value encountered during parsing to Double: {}" + text
-            );
             throw new IllegalArgumentException("Invalid numeric value: " + text);
         }
         return NumberUtils.createNumber(text).doubleValue();
