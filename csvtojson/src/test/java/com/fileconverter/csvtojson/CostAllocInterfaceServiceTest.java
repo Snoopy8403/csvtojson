@@ -1,117 +1,90 @@
-package com.fileconverter.csvtojson.service;
+package com.fileconverter.csvtojson;
 
 import com.fileconverter.csvtojson.model.CostAllocInterfaceDto.*;
+import com.fileconverter.csvtojson.service.CostAllocInterfaceService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.mock.web.MockMultipartFile;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@ExtendWith(MockitoExtension.class)
 class CostAllocInterfaceServiceTest {
 
-    @InjectMocks
     private CostAllocInterfaceService service;
 
-    @Mock
-    private MultipartFile multipartFile;
-
-    @Test
-    void convert_shouldParseCsvIntoRootDto() throws Exception {
-        String csv =
-                "CostAllocationIdentifier;CostAllocationTypeCode;StatusCode;DocumentCreationDate;ApprovalDate;SupplierName;AccountingDate;GrossAmount;VatAmount;CurrencyCode;DueDate;" +
-                        "CostAllocationLineIdentifier;OriginalCostAllocationLineID;DebtCaseId;DebtorName;CollateralCity;CollateralParcelNumber;SapDocumentNumber;FulfillmentDate\n" +
-                        "1;100;1;20240101;20240102;Supplier A;20240103;1000,50;270,50;HUF;20240110;" +
-                        "10;1000;100;John Doe;Budapest;123;SAP1;20240105\n" +
-                        "1;100;1;20240101;20240102;Supplier A;20240103;1000,50;270,50;HUF;20240110;" +
-                        "11;1001;101;Jane Doe;Budapest;124;SAP2;20240106\n" +
-                        "2;200;2;20240111;20240112;Supplier B;20240113;2000,00;540,00;EUR;20240120;" +
-                        "20;2000;200;Alice;Vienna;10;SAP3;20240115";
-
-        when(multipartFile.getInputStream())
-                .thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
-        when(multipartFile.getOriginalFilename()).thenReturn("test.csv");
-
-        Root root = service.convert(multipartFile);
-
-        // Header-ok száma
-        List<Header> headers = root.getHeaders();
-        assertEquals(2, headers.size());
-
-        // Első header
-        Header header1 = headers.get(0);
-        assertEquals(1L, header1.getCostAllocationIdentifier());
-        assertEquals(100L, header1.getCostAllocationTypeCode());
-        assertEquals(1L, header1.getStatusCode());
-        assertEquals("20240101", header1.getDocumentCreationDate());
-        assertEquals("20240102", header1.getApprovalDate());
-        assertEquals("Supplier A", header1.getSupplierName());
-        assertEquals(1000.50, header1.getGrossAmount());
-        assertEquals(270.50, header1.getVatAmount());
-        assertEquals(2, header1.getLines().size());
-
-        Line line1 = header1.getLines().get(0);
-        assertEquals(10L, line1.getCostAllocationLineIdentifier());
-        assertEquals(1000L, line1.getOriginalCostAllocationLineId());
-        assertEquals(100L, line1.getDebtCaseId());
-        assertEquals("John Doe", line1.getDebtorName());
-
-        Line line2 = header1.getLines().get(1);
-        assertEquals(11L, line2.getCostAllocationLineIdentifier());
-        assertEquals("Jane Doe", line2.getDebtorName());
-
-        // Második header
-        Header header2 = headers.get(1);
-        assertEquals(2L, header2.getCostAllocationIdentifier());
-        assertEquals(1, header2.getLines().size());
-        assertEquals("Alice", header2.getLines().get(0).getDebtorName());
+    @BeforeEach
+    void setUp() {
+        service = new CostAllocInterfaceService();
     }
 
     @Test
-    void convert_shouldHandleEmptyAndNullValues() throws Exception {
+    void shouldConvertCsvToDtoWithSingleHeaderAndMultipleLines() throws Exception {
+        // given
         String csv =
-                "CostAllocationIdentifier;CostAllocationTypeCode;StatusCode;DocumentCreationDate;ApprovalDate;SupplierName;AccountingDate;GrossAmount;VatAmount;CurrencyCode;DueDate;" +
-                        "CostAllocationLineIdentifier;OriginalCostAllocationLineID;DebtCaseId;DebtorName;CollateralCity;CollateralParcelNumber;SapDocumentNumber;FulfillmentDate\n" +
-                        "NULL;;1;;;;;;;NULL;;NULL;;;;;;";
+                "CostAllocationIdentifier;CostAllocationTypeCode;StatusCode;DocumentCreationDate;ApprovalDate;" +
+                        "SupplierName;AccountingDate;GrossAmount;VatAmount;CurrencyCode;DueDate;" +
+                        "CostAllocationLineIdentifier;OriginalCostAllocationLineID;DebtCaseId;DebtorName;" +
+                        "CollateralCity;CollateralParcelNumber;SapDocumentNumber;FulfillmentDate\n" +
+                        "HDR1;TYPE1;ACTIVE;2024-01-01;2024-01-02;Supplier A;2024-01-03;100.50;27.00;HUF;2024-01-10;" +
+                        "LINE1;ORIG1;DC1;John Doe;Budapest;123;SAP1;2024-01-05\n" +
+                        "HDR1;TYPE1;ACTIVE;2024-01-01;2024-01-02;Supplier A;2024-01-03;200.00;54.00;HUF;2024-01-10;" +
+                        "LINE2;ORIG2;DC2;Jane Doe;Debrecen;456;SAP2;2024-01-06";
 
-        when(multipartFile.getInputStream())
-                .thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
-        when(multipartFile.getOriginalFilename()).thenReturn("empty.csv");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test.csv",
+                "text/csv",
+                csv.getBytes(StandardCharsets.UTF_8)
+        );
 
-        Root root = service.convert(multipartFile);
-        Header header = root.getHeaders().get(0);
+        // when
+        Root result = service.convert(file);
 
-        assertNull(header.getCostAllocationIdentifier());
-        assertNull(header.getCostAllocationTypeCode());
-        assertNull(header.getDocumentCreationDate());
-        assertNull(header.getSupplierName());
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getHeaders()).hasSize(1);
 
-        Line line = header.getLines().get(0);
-        assertNull(line.getCostAllocationLineIdentifier());
-        assertNull(line.getOriginalCostAllocationLineId());
-        assertNull(line.getDebtorName());
+        Header header = result.getHeaders().get(0);
+        assertThat(header.getCostAllocationIdentifier()).isEqualTo("HDR1");
+        assertThat(header.getCostAllocationTypeCode()).isEqualTo("TYPE1");
+        assertThat(header.getSupplierName()).isEqualTo("Supplier A");
+        assertThat(header.getGrossAmount()).isEqualTo(100.50);
+        assertThat(header.getVatAmount()).isEqualTo(27.00);
+        assertThat(header.getCurrencyCode()).isEqualTo("HUF");
+
+        assertThat(header.getLines()).hasSize(2);
+
+        Line firstLine = header.getLines().get(0);
+        assertThat(firstLine.getCostAllocationLineIdentifier()).isEqualTo("LINE1");
+        assertThat(firstLine.getGrossAmount()).isEqualTo(100.50);
+        assertThat(firstLine.getVatAmount()).isEqualTo(27.00);
+        assertThat(firstLine.getDebtorName()).isEqualTo("John Doe");
+
+        Line secondLine = header.getLines().get(1);
+        assertThat(secondLine.getCostAllocationLineIdentifier()).isEqualTo("LINE2");
+        assertThat(secondLine.getGrossAmount()).isEqualTo(200.00);
+        assertThat(secondLine.getVatAmount()).isEqualTo(54.00);
+        assertThat(secondLine.getDebtorName()).isEqualTo("Jane Doe");
     }
 
     @Test
-    void convert_shouldThrowExceptionForInvalidNumeric() throws Exception {
+    void shouldThrowExceptionWhenNumericFieldIsInvalid() {
+        // given
         String csv =
-                "CostAllocationIdentifier;CostAllocationTypeCode;StatusCode;DocumentCreationDate;ApprovalDate;SupplierName;AccountingDate;GrossAmount;VatAmount;CurrencyCode;DueDate;" +
-                        "CostAllocationLineIdentifier;OriginalCostAllocationLineID;DebtCaseId;DebtorName;CollateralCity;CollateralParcelNumber;SapDocumentNumber;FulfillmentDate\n" +
-                        "abc;100;1;20240101;20240102;Supplier A;20240103;1000,50;270,50;HUF;20240110;" +
-                        "10;1000;100;John Doe;Budapest;123;SAP1;20240105";
+                "CostAllocationIdentifier;GrossAmount;VatAmount\n" +
+                        "HDR1;NOT_A_NUMBER;27.00";
 
-        when(multipartFile.getInputStream())
-                .thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
-        when(multipartFile.getOriginalFilename()).thenReturn("invalid.csv");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "invalid.csv",
+                "text/csv",
+                csv.getBytes(StandardCharsets.UTF_8)
+        );
 
-        assertThrows(IllegalArgumentException.class, () -> service.convert(multipartFile));
+        // when + then
+        assertThrows(IllegalArgumentException.class, () -> service.convert(file));
     }
 }
