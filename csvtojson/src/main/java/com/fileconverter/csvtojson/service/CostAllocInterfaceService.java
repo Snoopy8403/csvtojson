@@ -12,27 +12,57 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * Service a CSV -> JSON konverzióhoz a Cost Allocation Interface DTO-ra.
- * Biztonságosan parse-olja a numerikus mezőket NumberUtils segítségével,
- * String mezőknél pedig a getRaw() null-safe logikáját használja.
+ * Service réteg a Cost Allocation Interface CSV → JSON konverziójához.
+ *
+ * <p>
+ *     Ez a szolgáltatás csak IDEIGELENES! TÖRLÉSRE FOG KERÜLNI! A későbbiek során az INCASSO szinkron fogja kiváltani!!!
+ * </p>
+ *
+ * <p>
+ * A szolgáltatás egy feltöltött CSV fájlt dolgoz fel, és azt
+ * {@link com.fileconverter.csvtojson.model.CostAllocInterfaceDto.Root}
+ * DTO struktúrába tölti.
+ * </p>
+ *
+ * <p>
+ * Feldolgozás során:
+ * <ul>
+ *   <li>a CSV sorokat {@link Header} és {@link Line} DTO-kba rendezi,</li>
+ *   <li>a header rekordok a {@code CostAllocationIdentifier} mező alapján
+ *       kerülnek csoportosításra,</li>
+ *   <li>a numerikus mezők biztonságosan kerülnek parse-olásra
+ *       az Apache Commons {@link org.apache.commons.lang3.math.NumberUtils}
+ *       segítségével,</li>
+ *   <li>a String mezők null-safe módon kerülnek kiolvasásra a
+ *       {@link #getRaw(CSVRecord, String)} metóduson keresztül.</li>
+ * </ul>
+ * </p>
+ *
+ * <p>
+ * A szolgáltatás {@link org.springframework.stereotype.Service} annotációval
+ * van ellátva, így Spring bean-ként használható.
+ * </p>
  */
+
 @Slf4j
 @Service
 public class CostAllocInterfaceService {
 
-    // Numerikus String → Long konverzió biztonságos ellenőrzéssel
-    private final Function<String, Long> stringToLong = text -> {
+    /**
+     * Numerikus String → {@link Double} konverzió biztonságos ellenőrzéssel.
+     *
+     * <p>
+     * A konverzió menete:
+     * <ul>
+     *   <li>{@code null} bemenet esetén {@code null}-t ad vissza,</li>
+     *   <li>ellenőrzi, hogy az érték számmá alakítható-e
+     *       ({@link NumberUtils#isCreatable(String)}),</li>
+     *   <li>érvénytelen érték esetén {@link IllegalArgumentException}-t dob,</li>
+     *   <li>érvényes érték esetén {@link Double}-re konvertálja.</li>
+     * </ul>
+     * </p>
+     */
 
-        if (text == null) {
-                return null;
-            }
-            if (!NumberUtils.isCreatable(text)) {
-                throw new IllegalArgumentException("Invalid numeric value: " + text);
-            }
-            return NumberUtils.createNumber(text).longValue();
-    };
-
-    // Numerikus String → Double konverzió biztonságos ellenőrzéssel
     private final Function<String, Double> stringToDouble = text-> {
         if (text == null) {
             return null;
@@ -44,11 +74,35 @@ public class CostAllocInterfaceService {
     };
 
     /**
-     * CSV fájl feldolgozása és DTO struktúrába töltése
-     * @param file feltöltött CSV fájl
-     * @return Root DTO a feldolgozott adatokkal
-     * @throws Exception fájl olvasási hiba esetén
+     * CSV fájl feldolgozása és Cost Allocation Interface DTO struktúrába töltése.
+     *
+     * <p>
+     * A metódus beolvassa a feltöltött CSV fájlt, majd a rekordokat
+     * {@link Header} és {@link Line} DTO-kba szervezi.
+     * Az azonos {@code CostAllocationIdentifier} értékkel rendelkező sorok
+     * egy közös header alá kerülnek.
+     * </p>
+     *
+     * <p>
+     * CSV feldolgozási szabályok:
+     * <ul>
+     *   <li>a mezőelválasztó karakter {@code ;},</li>
+     *   <li>a CSV első sora header-ként kerül értelmezésre,</li>
+     *   <li>a header sor nem kerül rekordként feldolgozásra,</li>
+     *   <li>a mezők automatikusan trim-elésre kerülnek.</li>
+     * </ul>
+     * </p>
+     *
+     * <p>
+     * Numerikus mezők parse-olása a {@code stringToDouble} konverterrel történik,
+     * amely hibás adat esetén kivételt dob.
+     * </p>
+     *
+     * @param file a feltöltött CSV fájl
+     * @return a feldolgozott adatokat tartalmazó Root DTO
+     * @throws Exception fájlolvasási vagy feldolgozási hiba esetén
      */
+
     public Root convert(MultipartFile file) throws Exception {
         log.info("Fileprocessing started: {}", file.getOriginalFilename());
 
@@ -78,9 +132,9 @@ public class CostAllocInterfaceService {
             // Numerikus esetén a getRaw visszadja a Stringet, amit később parse-olunk, ha nem szám exceptiont dobunk
             if (currentHeader == null || !Objects.equals(headerIdRaw, previousHeaderId)) {
                 currentHeader = new Header()
-                        .setCostAllocationIdentifier(stringToLong.apply(getRaw(csvRecord, "CostAllocationIdentifier")))
-                        .setCostAllocationTypeCode(stringToLong.apply(getRaw(csvRecord, "CostAllocationTypeCode")))
-                        .setStatusCode(stringToLong.apply(getRaw(csvRecord, "StatusCode")))
+                        .setCostAllocationIdentifier(getRaw(csvRecord, "CostAllocationIdentifier"))
+                        .setCostAllocationTypeCode(getRaw(csvRecord, "CostAllocationTypeCode"))
+                        .setStatusCode(getRaw(csvRecord, "StatusCode"))
                         .setDocumentCreationDate(getRaw(csvRecord, "DocumentCreationDate"))
                         .setApprovalDate(getRaw(csvRecord, "ApprovalDate"))
                         .setSupplierName(getRaw(csvRecord, "SupplierName"))
@@ -96,13 +150,13 @@ public class CostAllocInterfaceService {
             // Line DTO létrehozása a rekordhoz
             Line line = new Line()
 
-                    .setCostAllocationLineIdentifier(stringToLong.apply(getRaw(csvRecord, "CostAllocationLineIdentifier")))
-                    .setOriginalCostAllocationLineId(stringToLong.apply(getRaw(csvRecord, "OriginalCostAllocationLineID")))
-                    .setStatusCode(stringToLong.apply(getRaw(csvRecord, "StatusCode")))
+                    .setCostAllocationLineIdentifier(getRaw(csvRecord, "CostAllocationLineIdentifier"))
+                    .setOriginalCostAllocationLineId(getRaw(csvRecord, "OriginalCostAllocationLineID"))
+                    .setStatusCode(getRaw(csvRecord, "StatusCode"))
                     .setGrossAmount(stringToDouble.apply(getRaw(csvRecord, "GrossAmount")))
                     .setVatAmount(stringToDouble.apply(getRaw(csvRecord, "VatAmount")))
                     .setCurrencyCode(getRaw(csvRecord, "CurrencyCode"))
-                    .setDebtCaseId(stringToLong.apply(getRaw(csvRecord, "DebtCaseId")))
+                    .setDebtCaseId(getRaw(csvRecord, "DebtCaseId"))
                     .setDebtorName(getRaw(csvRecord, "DebtorName"))
                     .setCollateralCity(getRaw(csvRecord, "CollateralCity"))
                     .setCollateralParcelNumber(getRaw(csvRecord, "CollateralParcelNumber"))
@@ -121,12 +175,27 @@ public class CostAllocInterfaceService {
     }
 
     /**
-     * Biztonságosan olvassa ki a CSV mezőt:
-     * - header nincs → null
-     * - rekord rövidebb → null
-     * - üres / "NULL" → null
-     * - trim-elés után adja vissza a Stringet
+     * Biztonságosan olvassa ki egy CSV rekord adott mezőjének értékét.
+     *
+     * <p>
+     * A metódus az alábbi esetekben {@code null}-t ad vissza:
+     * <ul>
+     *   <li>a megadott oszlop nem létezik a CSV header-ben,</li>
+     *   <li>a rekord rövidebb, mint az elvárt oszlopindex,</li>
+     *   <li>a mező értéke {@code null},</li>
+     *   <li>a mező üres string vagy {@code "NULL"} (kis- és nagybetű független).</li>
+     * </ul>
+     * </p>
+     *
+     * <p>
+     * Érvényes érték esetén a visszatérési érték trim-elt {@link String}.
+     * </p>
+     *
+     * @param csvRecord az aktuális CSV rekord
+     * @param column a kiolvasandó oszlop neve
+     * @return a trim-elt mezőérték vagy {@code null}
      */
+
     private String getRaw(CSVRecord csvRecord, String column) {
         if (!csvRecord.isMapped(column)) {
             return null;
