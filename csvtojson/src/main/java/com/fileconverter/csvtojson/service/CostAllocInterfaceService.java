@@ -12,35 +12,27 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * Service réteg a Cost Allocation Interface CSV → JSON konverziójához.
+ * Ideiglenes szolgáltatás a Cost Allocation Interface CSV → DTO konverziójához.
  *
  * <p>
- *     Ez a szolgáltatás csak IDEIGELENES! TÖRLÉSRE FOG KERÜLNI! A későbbiek során az INCASSO szinkron fogja kiváltani!!!
+ * A service egy feltöltött CSV fájlt dolgoz fel, és annak sorait
+ * {@link Header} és {@link Line} objektumokba rendezi.
+ * Az azonos {@code CostAllocationIdentifier} értékkel rendelkező rekordok
+ * egy közös {@link Header} alá kerülnek.
  * </p>
  *
  * <p>
- * A szolgáltatás egy feltöltött CSV fájlt dolgoz fel, és azt
- * {@link com.fileconverter.csvtojson.model.CostAllocInterfaceDto.Root}
- * DTO struktúrába tölti.
- * </p>
- *
- * <p>
- * Feldolgozás során:
+ * A CSV feldolgozás során:
  * <ul>
- *   <li>a CSV sorokat {@link Header} és {@link Line} DTO-kba rendezi,</li>
- *   <li>a header rekordok a {@code CostAllocationIdentifier} mező alapján
- *       kerülnek csoportosításra,</li>
+ *   <li>a mezők pontosvessző ({@code ;}) elválasztással kerülnek beolvasásra,</li>
  *   <li>a numerikus mezők biztonságosan kerülnek parse-olásra
- *       az Apache Commons {@link org.apache.commons.lang3.math.NumberUtils}
- *       segítségével,</li>
- *   <li>a String mezők null-safe módon kerülnek kiolvasásra a
- *       {@link #getRaw(CSVRecord, String)} metóduson keresztül.</li>
+ *       ({@link org.apache.commons.lang3.math.NumberUtils}),</li>
+ *   <li>a String mezők null-safe módon kerülnek kiolvasásra.</li>
  * </ul>
  * </p>
  *
  * <p>
- * A szolgáltatás {@link org.springframework.stereotype.Service} annotációval
- * van ellátva, így Spring bean-ként használható.
+ * <b>Megjegyzés:</b> a szolgáltatás ideiglenes, később INCASSO szinkron váltja ki.
  * </p>
  */
 

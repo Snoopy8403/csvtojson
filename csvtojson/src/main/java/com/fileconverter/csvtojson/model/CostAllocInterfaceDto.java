@@ -23,20 +23,6 @@ import java.util.List;
  *   <li>{@link Line} – a fejléc alá tartozó tételsor</li>
  * </ul>
  * </p>
- *
- * <p>
- * A belső osztályok Jackson annotációkkal vannak ellátva a JSON mezők
- * sorrendjének determinisztikus meghatározásához.
- * </p>
- *
- * <p>
- * Lombok annotációk kerülnek használatra az egyszerű DTO jelleg biztosítására:
- * <ul>
- *   <li>{@link lombok.Data} – getterek, setterek, {@code toString}, {@code equals}, {@code hashCode}</li>
- *   <li>{@link lombok.experimental.Accessors} – láncolható setterek</li>
- *   <li>{@link lombok.NoArgsConstructor} – alapértelmezett konstruktor</li>
- * </ul>
- * </p>
  */
 
 
